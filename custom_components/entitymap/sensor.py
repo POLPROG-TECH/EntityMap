@@ -142,9 +142,11 @@ class EntityMapSensor(RestoreSensor):
         if key == "last_scan":
             builder = self._builder
             duration = builder.last_scan_duration
-            return {
+            attributes = {
                 "status": builder.last_scan_status,
                 "duration_seconds": round(duration, 3) if duration is not None else None,
                 "adapter_errors": builder.adapter_error_count,
             }
+
+            return attributes
         return {}

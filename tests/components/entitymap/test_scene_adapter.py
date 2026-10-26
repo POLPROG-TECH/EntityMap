@@ -36,19 +36,17 @@ _EXPECTED_EDGES = {
 }
 
 
+"""GIVEN a scene defined with both an entities dict and an entity_id list."""
 @pytest.mark.asyncio
 async def test_extracts_scene_members(mock_hass):
-    """GIVEN a scene defined with both an entities dict and an entity_id list.
 
-    WHEN the adapter populates the graph.
-
-    THEN every valid member becomes a scene_member edge and non-entities are skipped.
-    """
     mock_hass.data = {"scene": _Store([_CONFIG])}
     graph = DependencyGraph()
 
+    """WHEN the adapter populates the graph."""
     await SceneAdapter(mock_hass).async_populate(graph)
 
+    """THEN every valid member becomes a scene_member edge and non-entities are skipped."""
     edges = {(e.source, e.target, e.dependency_kind.value) for e in graph.edges}
     assert edges == _EXPECTED_EDGES
     assert graph.nodes["scene.movie"].title == "Movie"

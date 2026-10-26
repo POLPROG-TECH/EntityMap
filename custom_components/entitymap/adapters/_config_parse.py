@@ -29,16 +29,23 @@ def as_list(value: Any) -> list[Any]:
 
 def extract_entity_ids(data: dict[str, Any], key: str = "entity_id") -> list[str]:
     """Extract entity IDs from a config value (scalar, comma-separated, or list)."""
-    value = data.get(key)
+    candidates = _entity_id_candidates(data.get(key))
+    entity_ids = [candidate for candidate in candidates if "." in candidate]
 
-    if value is None:
-        return []
+    return entity_ids
 
+
+def _entity_id_candidates(value: Any) -> list[str]:
+    """Split a config value into candidate entity IDs."""
     if isinstance(value, str):
-        return [v.strip() for v in value.split(",") if "." in v.strip()]
+        stripped_parts = [part.strip() for part in value.split(",")]
+
+        return stripped_parts
 
     if isinstance(value, list):
-        return [v for v in value if isinstance(v, str) and "." in v]
+        string_items = [item for item in value if isinstance(item, str)]
+
+        return string_items
 
     return []
 
@@ -64,12 +71,26 @@ def iter_nested_actions(action: dict[str, Any]) -> Iterator[dict[str, Any]]:
         yield from as_list(repeat.get("sequence", []))
 
 
-def _iter_branch_actions(nested: Any) -> Iterator[dict[str, Any]]:
-    """Yield the actions inside one nested branch list."""
-    if not isinstance(nested, list):
+def iter_nested_conditions(action: dict[str, Any]) -> Iterator[Any]:
+    """Yield each condition guarding a choose option, if block, or repeat loop."""
+    yield from as_list(action.get("if"))
+
+    for option in as_list(action.get("choose")):
+        if isinstance(option, dict):
+            yield from as_list(option.get("conditions"))
+
+    repeat = action.get("repeat")
+
+    if not isinstance(repeat, dict):
         return
 
-    for item in nested:
+    yield from as_list(repeat.get("while"))
+    yield from as_list(repeat.get("until"))
+
+
+def _iter_branch_actions(nested: Any) -> Iterator[dict[str, Any]]:
+    """Yield the actions inside one nested branch (a list or a single item)."""
+    for item in as_list(nested):
         if not isinstance(item, dict):
             continue
 

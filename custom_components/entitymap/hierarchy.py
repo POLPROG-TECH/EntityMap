@@ -31,11 +31,13 @@ def build_hierarchy(graph: DependencyGraph) -> dict[str, Any]:
     devices_by_area, unassigned_devices = _group_devices_by_area(devices, areas)
     result_areas = _assemble_areas(areas, devices_by_area, entities_by_area)
 
-    return {
+    hierarchy = {
         "areas": result_areas,
         "unassigned_devices": unassigned_devices,
         "unassigned_entities": unassigned_entities,
     }
+
+    return hierarchy
 
 
 def _collect_areas(graph: DependencyGraph) -> dict[str, dict[str, Any]]:

@@ -1,6 +1,7 @@
 /** Shared constants for the EntityMap panel. */
 
-export const D3_CDN = "https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js";
+// Vendored D3 v7.9.0 (ISC licence, see d3.LICENSE.txt).
+export const D3_SCRIPT_URL = new URL("./d3.min.js", import.meta.url).href;
 
 export const NODE_CONFIG = {
   device:     { icon: "🔌", color: "#42A5F5", shape: "rect",    label: "Device" },

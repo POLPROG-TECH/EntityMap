@@ -1,0 +1,2 @@
+# Vendored third-party bundle: keep it out of language stats and text diffs.
+custom_components/entitymap/frontend/d3.min.js linguist-vendored -diff

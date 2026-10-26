@@ -96,7 +96,7 @@ The panel is a native Web Component (`HTMLElement` + Shadow DOM), served as a **
 - `findings-view.js`, `detail-view.js` - issues grid and detail drawer
 - `constants.js` (config + palettes), `graph-data.js` (pure helpers: degree, domain, shortest path), `styles.js` (CSS)
 
-Capabilities: D3 force layout, SVG rendering, node size by degree, curved parallel edges, type/area/domain filters, search highlighting, focus (neighborhood isolation) and shortest-path highlighting, minimap, zoom controls, PNG export, dark mode, a colorblind-safe palette, a compact density mode, keyboard navigation, and a screen-reader live region. Tunable layout values live in `constants.js` (`GRAPH`). D3.js is loaded from CDN on first panel load to keep the integration package small.
+Capabilities: D3 force layout, SVG rendering, node size by degree, curved parallel edges, type/area/domain filters, search highlighting, focus (neighborhood isolation) and shortest-path highlighting, minimap, zoom controls, PNG export, dark mode, a colorblind-safe palette, a compact density mode, keyboard navigation, and a screen-reader live region. Tunable layout values live in `constants.js` (`GRAPH`). D3.js v7.9.0 is vendored as `frontend/d3.min.js` (ISC licence in `frontend/d3.LICENSE.txt`) and loaded from the panel's own static path on first panel load, so the graph works without internet access.
 
 ## Resource Usage
 

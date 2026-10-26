@@ -1,6 +1,6 @@
 /** EntityMap panel: a Shadow-DOM custom element composing the view mixins. */
 
-import { NODE_CONFIG, COLORBLIND_COLORS, D3_CDN } from "./constants.js";
+import { NODE_CONFIG, COLORBLIND_COLORS, D3_SCRIPT_URL } from "./constants.js";
 import { LayoutView } from "./layout.js";
 import { GraphView } from "./graph-view.js";
 import { GraphRenderView } from "./graph-render.js";
@@ -131,7 +131,7 @@ class EntityMapPanel extends LayoutView(
     }
     return new Promise((resolve, reject) => {
       const script = document.createElement("script");
-      script.src = D3_CDN;
+      script.src = D3_SCRIPT_URL;
       script.onload = () => { this._d3Loaded = true; resolve(); };
       script.onerror = reject;
       document.head.appendChild(script);

@@ -14,6 +14,7 @@ from ._config_parse import (
     extract_entity_ids,
     extract_template_refs,
     iter_nested_actions,
+    iter_nested_conditions,
 )
 from .base import SourceAdapter
 
@@ -29,16 +30,25 @@ class AutomationAdapter(SourceAdapter):
             self._process_automation(graph, entity_id, config)
 
     def _collect_configs(self) -> list[tuple[str, dict[str, Any]]]:
-        """Get (entity_id, config) pairs from the store, or fall back to states."""
+        """Get (entity_id, config) pairs from the entities, store, or states."""
+        entity_configs = self._entity_raw_configs("automation")
+
+        if entity_configs:
+            return entity_configs
+
         store = _get_automation_store(self.hass)
 
         if store:
-            return [(f"automation.{item.get('id', '')}", item) for item in store]
+            store_configs = [(f"automation.{item.get('id', '')}", item) for item in store]
 
-        return [
+            return store_configs
+
+        state_configs = [
             (state.entity_id, dict(state.attributes))
             for state in self.hass.states.async_all("automation")
         ]
+
+        return state_configs
 
     def _process_automation(
         self,
@@ -140,6 +150,9 @@ class AutomationAdapter(SourceAdapter):
                 confidence=Confidence.MEDIUM,
             )
 
+        for nested_condition in as_list(condition.get("conditions")):
+            self._process_condition(graph, auto_entity_id, nested_condition)
+
     def _process_action(
         self,
         graph: DependencyGraph,
@@ -160,17 +173,9 @@ class AutomationAdapter(SourceAdapter):
                     graph, auto_entity_id, entity_id, NodeType.ENTITY, DependencyKind.ACTION
                 )
 
-            for device_id in as_list(target.get("device_id", [])):
-                if not device_id:
-                    continue
+            self._add_device_actions(graph, auto_entity_id, target.get("device_id"))
 
-                self._add_dependency(
-                    graph,
-                    auto_entity_id,
-                    f"device.{device_id}",
-                    NodeType.DEVICE,
-                    DependencyKind.DEVICE_ACTION,
-                )
+        self._add_device_actions(graph, auto_entity_id, action.get("device_id"))
 
         for entity_id in extract_entity_ids(action, "entity_id"):
             self._add_dependency(
@@ -196,8 +201,27 @@ class AutomationAdapter(SourceAdapter):
                     graph, auto_entity_id, scene_id, NodeType.SCENE, DependencyKind.SERVICE_CALL
                 )
 
+        for nested_condition in iter_nested_conditions(action):
+            self._process_condition(graph, auto_entity_id, nested_condition)
+
         for nested_action in iter_nested_actions(action):
             self._process_action(graph, auto_entity_id, nested_action)
+
+    def _add_device_actions(
+        self, graph: DependencyGraph, auto_entity_id: str, device_ids: Any
+    ) -> None:
+        """Add a device-action edge for each device_id (scalar or list)."""
+        for device_id in as_list(device_ids):
+            if not device_id:
+                continue
+
+            self._add_dependency(
+                graph,
+                auto_entity_id,
+                f"device.{device_id}",
+                NodeType.DEVICE,
+                DependencyKind.DEVICE_ACTION,
+            )
 
     def _add_dependency(
         self,
@@ -246,13 +270,14 @@ def _get_automation_store(hass: HomeAssistant) -> list[dict[str, Any]] | None:
         if component is None:
             return None
 
-        if hasattr(component, "async_items"):
-            return [
-                item.as_dict() if hasattr(item, "as_dict") else item
-                for item in component.async_items()
-            ]
+        if not hasattr(component, "async_items"):
+            return None
 
-        return None
+        store_items = [
+            item.as_dict() if hasattr(item, "as_dict") else item for item in component.async_items()
+        ]
+
+        return store_items
     except Exception:  # noqa: BLE001
         _LOGGER.debug("Could not access automation store, will use state fallback")
         return None

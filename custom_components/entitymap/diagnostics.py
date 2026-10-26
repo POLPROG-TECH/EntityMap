@@ -31,7 +31,7 @@ async def async_get_config_entry_diagnostics(
     edge_summary = dict(Counter(edge.dependency_kind.value for edge in graph.edges))
     finding_summary = dict(Counter(finding.fragility_type.value for finding in findings))
 
-    return {
+    diagnostics = {
         "config_entry": {
             "entry_id": entry.entry_id,
             "options": dict(entry.options),
@@ -51,3 +51,5 @@ async def async_get_config_entry_diagnostics(
             "is_scanning": builder.is_scanning,
         },
     }
+
+    return diagnostics

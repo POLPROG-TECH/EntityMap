@@ -33,16 +33,15 @@ def _graph() -> DependencyGraph:
 class TestBuildHierarchy:
     """Scenarios for the hierarchy tree structure."""
 
+    """GIVEN an area with a device (carrying an entity) and a direct entity."""
     def test_device_and_direct_entity_attach_to_area(self):
-        """GIVEN an area with a device (carrying an entity) and a direct entity.
 
-        WHEN the hierarchy is built.
+        graph = _graph()
 
-        THEN the area holds the device and the direct entity, and the device
-        carries its own entity.
-        """
-        result = build_hierarchy(_graph())
+        """WHEN the hierarchy is built."""
+        result = build_hierarchy(graph)
 
+        """THEN the area holds the device and the direct entity, and the device carries its own entity."""
         assert len(result["areas"]) == 1
         area = result["areas"][0]
         assert area["title"] == "Kitchen"
@@ -50,38 +49,37 @@ class TestBuildHierarchy:
         assert [e["node_id"] for e in area["entities"]] == ["light.strip"]
         assert [e["node_id"] for e in area["devices"][0]["entities"]] == ["sensor.oven_temp"]
 
+    """GIVEN the same graph."""
     def test_counts_include_devices_direct_and_nested_entities(self):
-        """GIVEN the same graph.
 
-        WHEN the hierarchy is built.
+        graph = _graph()
 
-        THEN the area counts cover the device, the direct entity, and the
-        device's nested entity.
-        """
-        area = build_hierarchy(_graph())["areas"][0]
+        """WHEN the hierarchy is built."""
+        area = build_hierarchy(graph)["areas"][0]
 
+        """THEN the area counts cover the device, the direct entity, and the device's nested entity."""
         assert area["device_count"] == 1
         assert area["entity_count"] == 3
 
+    """GIVEN a device and an entity with no area."""
     def test_unassigned_buckets(self):
-        """GIVEN a device and an entity with no area.
 
-        WHEN the hierarchy is built.
+        graph = _graph()
 
-        THEN they land in the unassigned buckets, not under any area.
-        """
-        result = build_hierarchy(_graph())
+        """WHEN the hierarchy is built."""
+        result = build_hierarchy(graph)
 
+        """THEN they land in the unassigned buckets, not under any area."""
         assert [d["node_id"] for d in result["unassigned_devices"]] == ["device.orphan"]
         assert [e["node_id"] for e in result["unassigned_entities"]] == ["sensor.floating"]
 
+    """GIVEN an empty graph."""
     def test_empty_graph_yields_empty_tree(self):
-        """GIVEN an empty graph.
 
-        WHEN the hierarchy is built.
+        graph = DependencyGraph()
 
-        THEN every bucket is empty.
-        """
-        result = build_hierarchy(DependencyGraph())
+        """WHEN the hierarchy is built."""
+        result = build_hierarchy(graph)
 
+        """THEN every bucket is empty."""
         assert result == {"areas": [], "unassigned_devices": [], "unassigned_entities": []}

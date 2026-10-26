@@ -5,6 +5,17 @@ All notable changes to EntityMap will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1] - 2026-10-26
+
+### Changed
+
+- The graph panel now loads a bundled copy of D3.js v7.9.0 from `/entitymap_frontend/d3.min.js` instead of `cdn.jsdelivr.net`, so the graph renders on Home Assistant installs without internet access ([#2](https://github.com/POLPROG-TECH/EntityMap/issues/2)).
+
+### Fixed
+
+- Automations and scripts no longer appear as isolated nodes on current Home Assistant. Their configs are now read from each entity's `raw_config` in the entity component, since the state attributes the adapters fell back to do not include triggers, conditions, or actions ([#2](https://github.com/POLPROG-TECH/EntityMap/issues/2)).
+- Device actions built in the visual editor, which carry `device_id` at the top level of the action, now create a device dependency and a fragile `device_id` finding.
+
 ## [1.1.0] - 2026-06-16
 
 ### Added

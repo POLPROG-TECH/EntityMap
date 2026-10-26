@@ -29,10 +29,12 @@ async def async_register_services(hass: HomeAssistant, builder: GraphBuilder) ->
     async def handle_scan(call: ServiceCall) -> ServiceResponse:
         """Handle the scan service call."""
         graph = await builder.async_build()
-        return {
+        scan_summary = {
             "node_count": graph.node_count,
             "edge_count": graph.edge_count,
         }
+
+        return scan_summary
 
     async def handle_analyze_impact(call: ServiceCall) -> ServiceResponse:
         """Handle the analyze_impact service call."""
@@ -51,12 +53,14 @@ async def async_register_services(hass: HomeAssistant, builder: GraphBuilder) ->
         graph = builder.graph
 
         if node_id not in graph.nodes:
-            return {
+            not_found_response = {
                 "node_id": node_id,
                 "error": "Node not found in graph",
                 "inbound": [],
                 "outbound": [],
             }
+
+            return not_found_response
 
         inbound_edges = graph.get_inbound(node_id)
         outbound_edges = graph.get_outbound(node_id)
@@ -65,13 +69,15 @@ async def async_register_services(hass: HomeAssistant, builder: GraphBuilder) ->
             inbound_edges = [e for e in inbound_edges if e.confidence != Confidence.LOW]
             outbound_edges = [e for e in outbound_edges if e.confidence != Confidence.LOW]
 
-        return {
+        response = {
             "node_id": node_id,
             "inbound": [e.as_dict() for e in inbound_edges],
             "outbound": [e.as_dict() for e in outbound_edges],
             "inbound_count": len(inbound_edges),
             "outbound_count": len(outbound_edges),
         }
+
+        return response
 
     hass.services.async_register(
         DOMAIN,

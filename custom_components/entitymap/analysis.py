@@ -29,11 +29,13 @@ RISK_MEDIUM = 25
 def analyze_impact(graph: DependencyGraph, node_id: str) -> ImpactReport:
     """Analyze the impact of removing/disabling a node."""
     if node_id not in graph.nodes:
-        return ImpactReport(
+        not_found_report = ImpactReport(
             target_node_id=node_id,
             summary=f"Node '{node_id}' not found in the dependency graph.",
             severity=Severity.INFO,
         )
+
+        return not_found_report
 
     node = graph.nodes[node_id]
 
@@ -69,7 +71,7 @@ def analyze_impact(graph: DependencyGraph, node_id: str) -> ImpactReport:
     # Migration suggestions
     suggestions = _get_migration_suggestions(graph, node_id, node)
 
-    return ImpactReport(
+    report = ImpactReport(
         target_node_id=node_id,
         affected_nodes=tuple(sorted(all_affected)),
         affected_by_type=dict(type_counter),
@@ -79,6 +81,8 @@ def analyze_impact(graph: DependencyGraph, node_id: str) -> ImpactReport:
         migration_suggestions=tuple(suggestions),
         fragility_findings=tuple(findings),
     )
+
+    return report
 
 
 def _calculate_risk_score(
@@ -135,7 +139,11 @@ def _get_node_findings(graph: DependencyGraph, node_id: str) -> list[FragilityFi
     from .fragility import detect_fragility
 
     all_findings = detect_fragility(graph)
-    return [f for f in all_findings if f.node_id == node_id or node_id in f.related_node_ids]
+    node_findings = [
+        f for f in all_findings if f.node_id == node_id or node_id in f.related_node_ids
+    ]
+
+    return node_findings
 
 
 def _get_migration_suggestions(
@@ -177,7 +185,7 @@ def _suggest_device_id_references(inbound: list) -> MigrationSuggestion | None:
     if not device_refs:
         return None
 
-    return MigrationSuggestion(
+    suggestion = MigrationSuggestion(
         description=(
             f"This node has {len(device_refs)} device_id-based reference(s). "
             "These will break if the device is re-paired."
@@ -188,6 +196,8 @@ def _suggest_device_id_references(inbound: list) -> MigrationSuggestion | None:
             "triggers and conditions instead of device_id references."
         ),
     )
+
+    return suggestion
 
 
 def _suggest_affected_automations(
@@ -203,7 +213,7 @@ def _suggest_affected_automations(
     if not auto_deps:
         return None
 
-    return MigrationSuggestion(
+    suggestion = MigrationSuggestion(
         description=(
             f"{len(auto_deps)} automation(s) reference this node. "
             "Review each before making changes."
@@ -214,6 +224,8 @@ def _suggest_affected_automations(
             "to point to the replacement entity."
         ),
     )
+
+    return suggestion
 
 
 def _suggest_device_entity_migration(
@@ -232,7 +244,7 @@ def _suggest_device_entity_migration(
     if not device_entities:
         return None
 
-    return MigrationSuggestion(
+    suggestion = MigrationSuggestion(
         description=(
             f"This device provides {len(device_entities)} entities. "
             "After replacing the device, map old entities to new ones."
@@ -244,3 +256,5 @@ def _suggest_device_entity_migration(
             "customization to restore the original entity IDs."
         ),
     )
+
+    return suggestion

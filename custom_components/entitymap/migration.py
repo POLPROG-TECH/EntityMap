@@ -48,7 +48,7 @@ def get_migration_report(
 
 def _no_inbound_report(source_node) -> list[MigrationSuggestion]:
     """A node nothing depends on can be removed/replaced freely."""
-    return [
+    suggestions = [
         MigrationSuggestion(
             description=(
                 f"'{source_node.title}' has no inbound dependencies. "
@@ -56,6 +56,8 @@ def _no_inbound_report(source_node) -> list[MigrationSuggestion]:
             ),
         )
     ]
+
+    return suggestions
 
 
 def _group_inbound_by_kind(inbound: list[GraphEdge]) -> dict[DependencyKind, list[str]]:
@@ -126,7 +128,7 @@ def _device_reference_suggestion(inbound: list[GraphEdge]) -> MigrationSuggestio
     if not device_refs:
         return None
 
-    return MigrationSuggestion(
+    suggestion = MigrationSuggestion(
         description=(
             f"{len(device_refs)} item(s) use device_id references. "
             "These WILL break when the device is replaced."
@@ -139,6 +141,8 @@ def _device_reference_suggestion(inbound: list[GraphEdge]) -> MigrationSuggestio
             "switching to entity-based references for resilience."
         ),
     )
+
+    return suggestion
 
 
 def _membership_suggestions(by_kind: dict[DependencyKind, list[str]]) -> list[MigrationSuggestion]:
@@ -191,7 +195,7 @@ def _device_entity_mapping_suggestion(
 
     entity_ids = tuple(e.source for e in entity_edges)
 
-    return MigrationSuggestion(
+    suggestion = MigrationSuggestion(
         description=(
             f"This device provides {len(entity_ids)} entity/entities. Record them before removal."
         ),
@@ -205,3 +209,5 @@ def _device_entity_mapping_suggestion(
             "5. Verify all automations/scripts/scenes still work."
         ),
     )
+
+    return suggestion

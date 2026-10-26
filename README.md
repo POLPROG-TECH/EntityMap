@@ -112,7 +112,7 @@ Ready-made Lovelace cards - status tiles, gauges, history graphs, and a rescan b
 - **Summary sensors** - Node count, dependency count, fragility issue count, last scan time (with scan status, duration, and error attributes)
 - **WebSocket API** - Full programmatic access for custom dashboards and automations
 - **Fully async** - No blocking I/O; uses async adapters for all registry and config access
-- **Zero external dependencies** - Uses only libraries bundled with Home Assistant
+- **Zero external dependencies** - The backend uses only libraries bundled with Home Assistant, and the panel ships its own copy of D3.js, so nothing is fetched from the internet
 - **Diagnostics support** - Safe diagnostics output with sensitive data redaction
 - **UI configuration** - Config flow and options flow, no YAML needed
 
@@ -641,9 +641,7 @@ automation:
 <details>
 <summary><strong>Does EntityMap require internet access?</strong></summary>
 
-The backend is **100% local** - no internet required. However, the graph panel loads **D3.js from a CDN** on first use. If your HA instance has no internet access, the graph visualization won't render.
-
-Bundling D3.js locally is planned for a future release to support fully air-gapped installations.
+No. The backend is **100% local**, and the graph panel loads **D3.js v7.9.0 from the integration itself** (`/entitymap_frontend/d3.min.js`), so EntityMap works on fully air-gapped installations.
 </details>
 
 <details>
@@ -683,7 +681,6 @@ If installed via HACS, use HACS to remove it instead of manually deleting files.
 - **Automation configs accessed via HA APIs** - EntityMap reads automation configurations through HA component APIs, not raw YAML files. If HA changes these internal APIs, adapters may need updating.
 - **Entity availability is a point-in-time snapshot** - The `available` flag reflects status at scan time, not real-time.
 - **Graph clips at 500 nodes** - For browser performance. Use search and filters on large installations.
-- **D3.js loaded from CDN** - Requires internet on first panel load. Offline bundling is planned.
 - **Single config entry** - Only one EntityMap instance per HA installation.
 
 ---
@@ -694,7 +691,7 @@ If installed via HACS, use HACS to remove it instead of manually deleting files.
 - **No telemetry** - EntityMap does not collect or transmit usage data
 - **Read-only** - EntityMap never modifies your automations, scripts, scenes, or any configuration
 - **Diagnostics are redacted** - Entity IDs are anonymized in diagnostics downloads
-- **Network activity** - Only the frontend panel loads D3.js from `cdn.jsdelivr.net` on first use
+- **No network activity** - The panel loads its bundled copy of D3.js from your Home Assistant instance, never from a CDN
 
 ---
 

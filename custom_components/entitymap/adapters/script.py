@@ -29,16 +29,25 @@ class ScriptAdapter(SourceAdapter):
             self._process_script(graph, entity_id, config)
 
     def _collect_configs(self) -> list[tuple[str, dict[str, Any]]]:
-        """Get (entity_id, config) pairs from the store, or fall back to states."""
+        """Get (entity_id, config) pairs from the entities, store, or states."""
+        entity_configs = self._entity_raw_configs("script")
+
+        if entity_configs:
+            return entity_configs
+
         store = _get_script_store(self.hass)
 
         if store:
-            return [(f"script.{obj_id}", config) for obj_id, config in store.items()]
+            store_configs = [(f"script.{obj_id}", config) for obj_id, config in store.items()]
 
-        return [
+            return store_configs
+
+        state_configs = [
             (state.entity_id, dict(state.attributes))
             for state in self.hass.states.async_all("script")
         ]
+
+        return state_configs
 
     def _process_script(
         self,
@@ -80,17 +89,9 @@ class ScriptAdapter(SourceAdapter):
                     graph, script_entity_id, entity_id, NodeType.ENTITY, DependencyKind.ACTION
                 )
 
-            for device_id in as_list(target.get("device_id", [])):
-                if not device_id:
-                    continue
+            self._add_device_actions(graph, script_entity_id, target.get("device_id"))
 
-                self._add_dependency(
-                    graph,
-                    script_entity_id,
-                    f"device.{device_id}",
-                    NodeType.DEVICE,
-                    DependencyKind.DEVICE_ACTION,
-                )
+        self._add_device_actions(graph, script_entity_id, action.get("device_id"))
 
         for entity_id in extract_entity_ids(action, "entity_id"):
             self._add_dependency(
@@ -114,6 +115,22 @@ class ScriptAdapter(SourceAdapter):
 
         for nested_action in iter_nested_actions(action):
             self._process_action(graph, script_entity_id, nested_action)
+
+    def _add_device_actions(
+        self, graph: DependencyGraph, script_entity_id: str, device_ids: Any
+    ) -> None:
+        """Add a device-action edge for each device_id (scalar or list)."""
+        for device_id in as_list(device_ids):
+            if not device_id:
+                continue
+
+            self._add_dependency(
+                graph,
+                script_entity_id,
+                f"device.{device_id}",
+                NodeType.DEVICE,
+                DependencyKind.DEVICE_ACTION,
+            )
 
     def _link_template_value(
         self, graph: DependencyGraph, script_entity_id: str, value: Any
@@ -179,13 +196,15 @@ def _get_script_store(hass: HomeAssistant) -> dict[str, dict[str, Any]] | None:
         if component is None:
             return None
 
-        if hasattr(component, "async_items"):
-            return {
-                item.get("id", ""): item.as_dict() if hasattr(item, "as_dict") else item
-                for item in component.async_items()
-            }
+        if not hasattr(component, "async_items"):
+            return None
 
-        return None
+        store_items = {
+            item.get("id", ""): item.as_dict() if hasattr(item, "as_dict") else item
+            for item in component.async_items()
+        }
+
+        return store_items
     except Exception:  # noqa: BLE001
         _LOGGER.debug("Could not access script store")
         return None

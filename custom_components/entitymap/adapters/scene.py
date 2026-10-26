@@ -98,14 +98,18 @@ def _get_scene_store(hass: HomeAssistant) -> list[dict[str, Any]] | None:
     """Try to get scene configs from HA store."""
     try:
         component = hass.data.get("scene")
+
         if component is None:
             return None
-        if hasattr(component, "async_items"):
-            return [
-                item.as_dict() if hasattr(item, "as_dict") else item
-                for item in component.async_items()
-            ]
-        return None
+
+        if not hasattr(component, "async_items"):
+            return None
+
+        store_items = [
+            item.as_dict() if hasattr(item, "as_dict") else item for item in component.async_items()
+        ]
+
+        return store_items
     except Exception:  # noqa: BLE001
         _LOGGER.debug("Could not access scene store")
         return None

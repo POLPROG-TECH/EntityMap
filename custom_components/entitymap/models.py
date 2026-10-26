@@ -30,7 +30,7 @@ class GraphNode:
 
     def as_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
-        return {
+        serialized = {
             "node_id": self.node_id,
             "node_type": self.node_type.value,
             "title": self.title,
@@ -41,6 +41,8 @@ class GraphNode:
             "available": self.available,
             "metadata": self.metadata,
         }
+
+        return serialized
 
 
 @dataclass(frozen=True, slots=True)
@@ -56,7 +58,7 @@ class GraphEdge:
 
     def as_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
-        return {
+        serialized = {
             "source": self.source,
             "target": self.target,
             "dependency_kind": self.dependency_kind.value,
@@ -64,6 +66,8 @@ class GraphEdge:
             "source_of_truth": self.source_of_truth,
             "notes": self.notes,
         }
+
+        return serialized
 
 
 @dataclass(frozen=True, slots=True)
@@ -80,7 +84,7 @@ class FragilityFinding:
 
     def as_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
-        return {
+        serialized = {
             "finding_id": self.finding_id,
             "fragility_type": self.fragility_type.value,
             "severity": self.severity.value,
@@ -89,6 +93,8 @@ class FragilityFinding:
             "rationale": self.rationale,
             "remediation": self.remediation,
         }
+
+        return serialized
 
 
 @dataclass(frozen=True, slots=True)
@@ -101,11 +107,13 @@ class MigrationSuggestion:
 
     def as_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
-        return {
+        serialized = {
             "description": self.description,
             "affected_items": list(self.affected_items),
             "recommendation": self.recommendation,
         }
+
+        return serialized
 
 
 @dataclass(frozen=True, slots=True)
@@ -123,7 +131,7 @@ class ImpactReport:
 
     def as_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
-        return {
+        serialized = {
             "target_node_id": self.target_node_id,
             "affected_nodes": list(self.affected_nodes),
             "affected_by_type": self.affected_by_type,
@@ -133,6 +141,8 @@ class ImpactReport:
             "migration_suggestions": [s.as_dict() for s in self.migration_suggestions],
             "fragility_findings": [f.as_dict() for f in self.fragility_findings],
         }
+
+        return serialized
 
 
 @dataclass(slots=True)
@@ -168,11 +178,15 @@ class DependencyGraph:
 
     def get_dependents(self, node_id: str) -> set[str]:
         """Get all node IDs that depend on the given node (inbound sources)."""
-        return {edge.source for edge in self.get_inbound(node_id)}
+        dependents = {edge.source for edge in self.get_inbound(node_id)}
+
+        return dependents
 
     def get_dependencies(self, node_id: str) -> set[str]:
         """Get all node IDs that the given node depends on (outbound targets)."""
-        return {edge.target for edge in self.get_outbound(node_id)}
+        dependencies = {edge.target for edge in self.get_outbound(node_id)}
+
+        return dependencies
 
     def get_transitive_dependents(self, node_id: str) -> set[str]:
         """Get all nodes that transitively depend on the given node."""
@@ -262,9 +276,11 @@ class DependencyGraph:
 
     def as_dict(self) -> dict[str, Any]:
         """Serialize the full graph."""
-        return {
+        serialized = {
             "nodes": [n.as_dict() for n in self.nodes.values()],
             "edges": [e.as_dict() for e in self.edges],
             "node_count": self.node_count,
             "edge_count": self.edge_count,
         }
+
+        return serialized
