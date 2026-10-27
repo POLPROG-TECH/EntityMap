@@ -1,4 +1,4 @@
-"""Template adapter - scan template entities for the entities they reference."""
+"""Dependency edges from template entities to the entities their templates read."""
 
 from __future__ import annotations
 

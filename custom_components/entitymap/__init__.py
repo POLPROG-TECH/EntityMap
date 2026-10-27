@@ -1,4 +1,4 @@
-"""The EntityMap integration - dependency mapping and impact analysis for Home Assistant."""
+"""EntityMap: dependency mapping and impact analysis for Home Assistant."""
 
 from __future__ import annotations
 
@@ -33,6 +33,9 @@ PLATFORMS: list[str] = ["sensor", "button"]
 
 DATA_VIEW_REGISTERED = f"{DOMAIN}_view_registered"
 
+# Each missing entity gets its own repair issue; past this many they would flood the Repairs list.
+MAX_MISSING_ENTITY_ISSUES = 5
+
 
 @dataclass
 class EntityMapRuntimeData:
@@ -54,19 +57,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: EntityMapConfigEntry) ->
     builder = GraphBuilder(hass, entry)
     unsub_listeners: list[Any] = []
 
-    # Store runtime data
     entry.runtime_data = EntityMapRuntimeData(
         builder=builder,
         unsub_listeners=unsub_listeners,
     )
 
-    # Register services
     await async_register_services(hass, builder)
-
-    # Register WebSocket commands (idempotent)
     async_register_websocket_commands(hass)
 
-    # Serve the panel's frontend assets (once per HA session)
+    # Static paths cannot be unregistered, so a reloaded entry must not add them twice.
     if DATA_VIEW_REGISTERED not in hass.data:
         try:
             await async_register_frontend(hass)
@@ -74,20 +73,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: EntityMapConfigEntry) ->
         except Exception:  # noqa: BLE001
             _LOGGER.debug("EntityMap frontend already registered")
 
-    # Register the frontend sidebar panel (idempotent - overwrites if exists)
     try:
         await _async_register_panel(hass)
     except Exception:  # noqa: BLE001
         _LOGGER.debug("EntityMap panel already registered")
 
-    # Set up entity platforms
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     _setup_startup_scan(hass, entry, builder, unsub_listeners)
     _setup_auto_refresh(hass, entry, builder, unsub_listeners)
     _setup_periodic_scan(hass, entry, builder, unsub_listeners)
 
-    # Listen for options updates
     entry.async_on_unload(entry.add_update_listener(_async_update_options))
 
     return True
@@ -165,7 +161,7 @@ def _setup_periodic_scan(
 
 
 async def _async_update_options(hass: HomeAssistant, entry: EntityMapConfigEntry) -> None:
-    """Handle options update - reload the integration."""
+    """Reload the integration when its options change."""
     await hass.config_entries.async_reload(entry.entry_id)
 
 
@@ -175,18 +171,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: EntityMapConfigEntry) -
 
     from .services import async_unregister_services
 
-    # Remove listeners
     for unsub in entry.runtime_data.unsub_listeners:
         if callable(unsub):
             unsub()
 
-    # Unload platforms
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    # Unregister services
     await async_unregister_services(hass)
-
-    # Remove panel
     frontend.async_remove_panel(hass, "entitymap")
 
     return unload_ok
@@ -224,7 +215,6 @@ async def _async_create_repair_issues(hass: HomeAssistant, builder: GraphBuilder
 
     findings = builder.findings
 
-    # Count device_id references
     device_id_count = sum(
         1 for f in findings if f.fragility_type == FragilityType.DEVICE_ID_REFERENCE
     )
@@ -239,9 +229,8 @@ async def _async_create_repair_issues(hass: HomeAssistant, builder: GraphBuilder
             translation_placeholders={"count": str(device_id_count)},
         )
 
-    # Missing entity references
     missing_refs = [f for f in findings if f.fragility_type == FragilityType.MISSING_ENTITY]
-    for finding in missing_refs[:5]:  # Limit to 5 repair issues
+    for finding in missing_refs[:MAX_MISSING_ENTITY_ISSUES]:
         related = finding.related_node_ids[0] if finding.related_node_ids else "unknown"
         ir.async_create_issue(
             hass,

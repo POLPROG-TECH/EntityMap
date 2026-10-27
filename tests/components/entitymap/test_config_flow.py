@@ -22,8 +22,6 @@ from custom_components.entitymap.const import (
     CONF_SCAN_ON_STARTUP,
 )
 
-# ── Config Flow ─────────────────────────────────────────────────────
-
 
 class TestConfigFlowUserStep:
     """Scenarios for the initial user setup step."""
@@ -97,7 +95,6 @@ class TestConfigFlowUserStep:
         assert options[CONF_INCLUDE_TEMPLATES] is False
 
 
-# ── Options Flow ────────────────────────────────────────────────────
 
 
 class TestOptionsFlowInit:

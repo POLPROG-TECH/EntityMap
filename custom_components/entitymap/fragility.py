@@ -159,7 +159,6 @@ def _detect_tight_device_coupling(
 ) -> list[FragilityFinding]:
     """Detect automations tightly coupled to a single device via many edges."""
     findings: list[FragilityFinding] = []
-    # Count device references per automation
     auto_device_refs: dict[str, Counter[str]] = {}
     device_ref_kinds = {
         DependencyKind.DEVICE_TRIGGER,

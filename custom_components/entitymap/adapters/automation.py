@@ -1,4 +1,4 @@
-"""Automation adapter - parse automation configs for dependency edges."""
+"""Dependency edges from automation triggers, conditions and actions."""
 
 from __future__ import annotations
 

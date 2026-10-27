@@ -29,12 +29,8 @@ async def async_register_services(hass: HomeAssistant, builder: GraphBuilder) ->
     async def handle_scan(call: ServiceCall) -> ServiceResponse:
         """Handle the scan service call."""
         graph = await builder.async_build()
-        scan_summary = {
-            "node_count": graph.node_count,
-            "edge_count": graph.edge_count,
-        }
 
-        return scan_summary
+        return {"node_count": graph.node_count, "edge_count": graph.edge_count}
 
     async def handle_analyze_impact(call: ServiceCall) -> ServiceResponse:
         """Handle the analyze_impact service call."""
@@ -43,7 +39,7 @@ async def async_register_services(hass: HomeAssistant, builder: GraphBuilder) ->
         return report.as_dict()
 
     async def handle_export(call: ServiceCall) -> ServiceResponse:
-        """Handle the export service call - return the full graph and findings."""
+        """Return the full graph and its findings."""
         return builder.export_data()
 
     async def handle_get_dependencies(call: ServiceCall) -> ServiceResponse:

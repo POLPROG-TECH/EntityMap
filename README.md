@@ -52,46 +52,90 @@ Unlike manually searching through YAML files, EntityMap gives you a **complete, 
 
 ### Dependency Graph
 
-Full interactive force-directed graph - every device, entity, automation, script, and scene as a connected node.
+Every device, entity, automation, script, scene, helper and group as a connected node. Edge color shows the dependency type (trigger, condition, action, reference, structure), and the type chips at the top double as the legend and filter.
 
 <p align="center">
-  <img src="images/screenshots/graph-view.jpg" alt="EntityMap - dependency graph" width="800">
+  <img src="images/screenshots/graph-view.jpg" alt="EntityMap dependency graph" width="800">
 </p>
 
-### Impact Analysis & Detail Panel
+### Impact Analysis
 
-Click any node to see risk score, affected entities, and step-by-step migration guidance.
+Select a node to see its risk score, what depends on it by type, and how to replace it safely. Its neighborhood stays lit while the rest of the graph dims.
 
 <p align="center">
-  <img src="images/screenshots/graph-detail.jpg" alt="EntityMap - impact analysis" width="800">
+  <img src="images/screenshots/graph-detail.jpg" alt="EntityMap impact analysis for a selected device" width="800">
 </p>
 
-### Hierarchy - List View
+### Layouts
 
-Collapsible list of Areas → Devices → Entities with entity IDs, availability badges, and counts.
+**By room**: one frame per area. Automations and scripts join the room they mostly control, or an "Across rooms" lane when they span several.
 
 <p align="center">
-  <img src="images/screenshots/hierarchy-list.jpg" alt="EntityMap - hierarchy list" width="800">
+  <img src="images/screenshots/graph-rooms.jpg" alt="EntityMap graph arranged by room" width="800">
 </p>
 
-### Hierarchy - Tree View
-
-Visual D3 tree layout (vertical and horizontal) - like a genealogical tree for your smart home.
+**Event flow**: columns follow an event from its source, through the automation or script, to the entity it controls, its device and its area.
 
 <p align="center">
-  <img src="images/screenshots/hierarchy-tree.jpg" alt="EntityMap - hierarchy tree (vertical)" width="800">
+  <img src="images/screenshots/graph-flow.jpg" alt="EntityMap event flow layout" width="800">
+</p>
+
+**Around selected**: the selected node in the middle, what it depends on to the right, what uses it to the left, one ring per step. Everything else fades.
+
+<p align="center">
+  <img src="images/screenshots/graph-radial.jpg" alt="EntityMap layout around the selected node" width="800">
+</p>
+
+### 3D View
+
+Each node type on its own floor above the 2D floor plan. Rotate, zoom and select like in 2D.
+
+<p align="center">
+  <img src="images/screenshots/graph-3d.jpg" alt="EntityMap layered 3D view" width="800">
+</p>
+
+### Dark Theme and Folded Entities
+
+The panel follows the Home Assistant theme, or a Light or Dark choice of its own. "Fold entities" collapses each device's entities into the device, shown as a "+N" badge.
+
+<p align="center">
+  <img src="images/screenshots/graph-dark.jpg" alt="EntityMap in dark theme, by room, with entities folded into devices" width="800">
+</p>
+
+### Issues
+
+All fragility findings as cards with the fix for each. Filter by severity, sort, search, and export as CSV or JSON.
+
+<p align="center">
+  <img src="images/screenshots/issues.jpg" alt="EntityMap issues view" width="800">
+</p>
+
+### Hierarchy: List
+
+Areas, devices and entities with manufacturer, model and counts.
+
+<p align="center">
+  <img src="images/screenshots/hierarchy-list.jpg" alt="EntityMap hierarchy list" width="800">
+</p>
+
+### Hierarchy: Tree
+
+Vertical or horizontal. Hovering a node lights its branch, with dots flowing from Home down to its entities.
+
+<p align="center">
+  <img src="images/screenshots/hierarchy-tree.jpg" alt="EntityMap hierarchy tree, vertical" width="800">
 </p>
 
 <p align="center">
-  <img src="images/screenshots/hierarchy-tree-horizontal.jpg" alt="EntityMap - hierarchy tree (horizontal)" width="800">
+  <img src="images/screenshots/hierarchy-tree-horizontal.jpg" alt="EntityMap hierarchy tree, horizontal, with a traced branch" width="800">
 </p>
 
 ### Dashboard Cards
 
-Ready-made Lovelace cards - status tiles, gauges, history graphs, and a rescan button.
+Ready-made Lovelace cards: status tiles, gauges, history graphs, and a rescan button.
 
 <p align="center">
-  <img src="images/screenshots/dashboard-cards.jpg" alt="EntityMap - dashboard cards" width="400">
+  <img src="images/screenshots/dashboard-cards.jpg" alt="EntityMap dashboard cards" width="400">
 </p>
 
 ---
@@ -100,14 +144,20 @@ Ready-made Lovelace cards - status tiles, gauges, history graphs, and a rescan b
 
 - **Interactive dependency graph** - Zoomable, draggable force-directed visualization; nodes are sized by importance and coded by color and shape
 - **Focus, search & path-finding** - Isolate a node's neighborhood, highlight search matches, and trace the dependency path between any two nodes
-- **Filters** - By node type (chips or the clickable legend), and by area or domain
-- **Hierarchy view** - Area → Device → Entity tree with list and visual D3 tree modes (horizontal & vertical)
+- **Filters** - By node type (the type chips double as the legend), and by area or domain
+- **Hierarchy view** - Area → Device → Entity as a list or a D3 tree (horizontal or vertical), with animated branch tracing
 - **Impact analysis** - Select any node to see exactly what breaks if you remove, disable, or replace it
 - **Fragility detection** - Automatically find device_id references, missing entities, stale references, tight coupling
 - **Migration guidance** - Step-by-step recommendations for safely replacing devices or entities
 - **Repair issues** - Actionable warnings surfaced in Home Assistant's Repairs dashboard
-- **Accessible & themable** - Keyboard navigation, screen-reader announcements, dark mode, a colorblind-safe palette, and a compact density mode
+- **Accessible & themable** - Keyboard navigation, screen-reader announcements, follows the Home Assistant light or dark theme (or a Light or Dark choice for the panel in View options), a colorblind-safe palette, and a compact density mode
 - **Minimap, zoom controls & PNG export** - Navigate large graphs and export the current view as an image
+- **Live, linkable panel** - Refreshes itself after every scan, keeps the view and selected node in the URL, and opens nodes straight in the Home Assistant automation, script, scene, device, or area editor
+- **Graph layouts** - Free, by room, event flow (sources to automations to controlled entities) or around the selected node, plus folding entities into their devices
+- **Layered 3D view** - Each node type on its own floor above the 2D floor plan; rotate, zoom and select like in 2D, with no extra download until it is opened
+- **Flow and impact animations** - Dots on the edges show which way events travel, and selecting a node sends a wave through everything that depends on it
+- **Issues report** - Filter by severity, sort, and export the listed issues as CSV or JSON
+- **Localized panel** - English and Polish, following the Home Assistant user language, then the browser language
 - **Services** - `entitymap.scan`, `entitymap.export`, `entitymap.analyze_impact`, `entitymap.get_dependencies`
 - **Summary sensors** - Node count, dependency count, fragility issue count, last scan time (with scan status, duration, and error attributes)
 - **WebSocket API** - Full programmatic access for custom dashboards and automations
@@ -228,35 +278,42 @@ EntityMap adds a panel to your Home Assistant sidebar. Here's what you can do:
 
 - **Pan and zoom** - Scroll to zoom, or use the on-canvas **+ / − / ⤢ fit / ⟲ reset** buttons; drag the background to pan
 - **Minimap** - Corner overview showing the whole graph and your current viewport
+- **Layout** - Free, By room, Event flow or Around selected, picked in the filter bar and remembered
+- **Fold entities** - Collapse entities into their devices; a "+N" badge on a device expands it again
 - **Drag nodes** - Click and drag any node to rearrange the layout
 - **Node size** - Larger nodes have more dependencies (higher importance)
 - **Click a node** - Opens the detail panel with impact analysis, fragility findings, and migration guidance
 - **Double-click a node** - Focus mode: isolate that node and its immediate neighbors (Esc or "Clear" to exit)
-- **Filter by type** - Use the chips, or click items in the legend (it doubles as a filter)
+- **Filter by type** - Use the type chips in the filter bar; they also serve as the node legend
 - **Filter by area or domain** - Narrow the graph with the scope dropdown
 - **Search** - Filter nodes by name or ID (neighbors of matches are kept); matches get a highlight ring
 - **🔗 Path** - Toggle path mode, then click two nodes to highlight the dependency chain between them
-- **⬇ PNG** - Download the current graph view as an image
-- **Display toggles** - Compact density (⇕) and colorblind-safe palette (◑) in the header; both are remembered
+- **2D | 3D** - Switch to the layered 3D view under Tools
+- **Export** - Download the current graph view as a PNG from the View menu
+- **View options** - Theme (Automatic, Light or Dark), compact density, colorblind-safe palette and animations in the header menu; all are remembered
 - **Performance** - Very large graphs hide labels automatically to stay smooth
 
 ### Issues View
 
 - Switch to the **Issues** tab to see all fragility findings as a card grid
-- Cards are color-coded by severity (critical, high, medium, low, info)
-- Click any card to jump to the affected node in the graph view
+- Cards are color-coded by severity (critical, high, medium, low, info) and show the suggested fix
+- Filter by severity, sort by severity, issue type or node, and search the list
+- Export the listed issues as CSV or JSON
+- Node ids on a card jump to that node in the graph view
 
 ### Hierarchy View
 
 - Switch to the **Hierarchy** tab to browse your setup organized by Area → Device → Entity
 - **List mode** - Collapsible sections per area with device/entity counts, entity IDs, and availability badges; expand/collapse all with one click
 - **Tree mode** - Visual D3 tree layout; toggle between **↔ Horizontal** and **↕ Vertical** orientation; zoom, pan, and click any node to jump to the graph view
+- **Branch tracing** - Hover or focus a tree node to light its path to Home and its subtree, with dots flowing from parent to child
 
 ### Detail Panel
 
 When you click a node, the right panel shows:
 
 - **Node identity** - Type badge, name, entity ID, availability status
+- **Actions** - Open the node in its Home Assistant editor or page, focus its neighborhood, replay the impact animation, and (with folding on) show or fold a device's entities
 - **Impact analysis** - Risk meter (0-100%), severity, affected entity counts by type
 - **Fragility findings** - Issues specific to this node with severity and remediation
 - **Migration guidance** - Step-by-step recommendations if you're planning to replace or remove this entity/device
@@ -641,7 +698,7 @@ automation:
 <details>
 <summary><strong>Does EntityMap require internet access?</strong></summary>
 
-No. The backend is **100% local**, and the graph panel loads **D3.js v7.9.0 from the integration itself** (`/entitymap_frontend/d3.min.js`), so EntityMap works on fully air-gapped installations.
+No. The backend is **100% local**, and the graph panel loads **D3.js v7.9.0 from the integration itself** (`/entitymap_frontend/vendor/d3.min.js`), so EntityMap works on fully air-gapped installations.
 </details>
 
 <details>
@@ -746,82 +803,11 @@ pip install homeassistant voluptuous aiohttp pytest pytest-asyncio pytest-cov ru
 pytest tests/ -v --cov=custom_components/entitymap
 ```
 
-### Test Report
+The panel's pure modules (layouts, filters, geometry, escaping, localization, routing, the 3D math) have dependency-free unit tests that run on Node.js 22 or newer. Tests cover behavior only; code style is left to review and the linters:
 
-All tests follow the **GIVEN / WHEN / THEN** convention.
-
-| Module | Tests | Status |
-|---|---|---|
-| **Analysis** - impact analysis engine | 11 | ✅ |
-| **Config Flow** - UI setup & options | 6 | ✅ |
-| **Diagnostics** - diagnostics export | 4 | ✅ |
-| **Fragility** - fragility detection | 14 | ✅ |
-| **Graph** - graph builder lifecycle | 6 | ✅ |
-| **Migration** - migration suggestions | 9 | ✅ |
-| **Models** - domain models & serialization | 33 | ✅ |
-| **Total** | **83** | **✅ All passing** |
-
-<details>
-<summary>Full test breakdown by scenario class</summary>
-
-**Analysis** (`test_analysis.py`)
-- `TestImpactOnNonexistentNode` - 2 tests
-- `TestImpactOnEntityWithDependents` - 3 tests
-- `TestImpactOnDevice` - 2 tests
-- `TestImpactOnHelper` - 1 test
-- `TestImpactOnIsolatedNode` - 2 tests
-- `TestImpactRiskScoring` - 1 test
-
-**Config Flow** (`test_config_flow.py`)
-- `TestConfigFlowUserStep` - 3 tests
-- `TestOptionsFlowInit` - 3 tests
-
-**Diagnostics** (`test_diagnostics.py`)
-- `TestDiagnosticsOutput` - 2 tests
-- `TestDiagnosticsPrivacy` - 1 test
-- `TestDiagnosticsWithFindings` - 1 test
-
-**Fragility** (`test_fragility.py`)
-- `TestCleanGraph` - 2 tests
-- `TestMissingEntityReference` - 2 tests
-- `TestMissingDeviceReference` - 1 test
-- `TestDeviceIdUsage` - 2 tests
-- `TestDisabledReference` - 2 tests
-- `TestTightDeviceCoupling` - 2 tests
-- `TestHiddenDependency` - 2 tests
-- `TestFindingIdStability` - 1 test
-
-**Graph** (`test_graph.py`)
-- `TestGraphBuilderInitialState` - 2 tests
-- `TestGraphBuilderBuild` - 2 tests
-- `TestGraphBuilderSerialization` - 2 tests
-
-**Migration** (`test_migration.py`)
-- `TestMigrationForNonexistentNode` - 1 test
-- `TestMigrationForIsolatedNode` - 1 test
-- `TestMigrationForTriggerDependency` - 2 tests
-- `TestMigrationForDeviceReplacement` - 2 tests
-- `TestMigrationForSceneMembers` - 1 test
-- `TestMigrationForGroupMembers` - 1 test
-- `TestMigrationForMultipleDependencies` - 1 test
-
-**Models** (`test_models.py`)
-- `TestGraphNodeCreation` - 3 tests
-- `TestGraphNodeSerialization` - 2 tests
-- `TestGraphNodeImmutability` - 2 tests
-- `TestGraphEdgeCreation` - 2 tests
-- `TestGraphEdgeSerialization` - 1 test
-- `TestGraphNodeOperations` - 3 tests
-- `TestGraphEdgeOperations` - 4 tests
-- `TestGraphDependencyQueries` - 3 tests
-- `TestGraphTransitiveTraversal` - 2 tests
-- `TestGraphNeighborhood` - 3 tests
-- `TestGraphLifecycle` - 2 tests
-- `TestFragilityFindingSerialization` - 2 tests
-- `TestImpactReportSerialization` - 2 tests
-- `TestMigrationSuggestionSerialization` - 2 tests
-
-</details>
+```bash
+node --test "tests/frontend/*.test.mjs"
+```
 
 ### Linting
 

@@ -24,8 +24,6 @@ from custom_components.entitymap.models import (
     MigrationSuggestion,
 )
 
-# ── GraphNode ───────────────────────────────────────────────────────
-
 
 class TestGraphNodeCreation:
     """Scenarios for creating graph nodes."""
@@ -141,7 +139,6 @@ class TestGraphNodeImmutability:
             node.node_type = NodeType.DEVICE
 
 
-# ── GraphEdge ───────────────────────────────────────────────────────
 
 
 class TestGraphEdgeCreation:
@@ -199,7 +196,6 @@ class TestGraphEdgeSerialization:
         assert d["source"] == "automation.test"
 
 
-# ── DependencyGraph ─────────────────────────────────────────────────
 
 
 class TestGraphNodeOperations:
@@ -464,7 +460,6 @@ class TestGraphLifecycle:
         assert d["nodes"][0]["node_id"] == "a"
 
 
-# ── FragilityFinding ────────────────────────────────────────────────
 
 
 class TestFragilityFindingSerialization:
@@ -509,7 +504,6 @@ class TestFragilityFindingSerialization:
         assert d["related_node_ids"] == []
 
 
-# ── ImpactReport ───────────────────────────────────────────────────
 
 
 class TestImpactReportSerialization:
@@ -549,7 +543,6 @@ class TestImpactReportSerialization:
         assert d["severity"] == "info"
 
 
-# ── MigrationSuggestion ────────────────────────────────────────────
 
 
 class TestMigrationSuggestionSerialization:

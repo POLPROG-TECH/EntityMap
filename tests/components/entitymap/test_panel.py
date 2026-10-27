@@ -25,8 +25,8 @@ from custom_components.entitymap.panel import (
     async_register_frontend,
 )
 
-VENDORED_D3 = FRONTEND_DIR / "d3.min.js"
-VENDORED_D3_LICENSE = FRONTEND_DIR / "d3.LICENSE.txt"
+VENDORED_D3 = FRONTEND_DIR / "vendor" / "d3.min.js"
+VENDORED_D3_LICENSE = FRONTEND_DIR / "vendor" / "d3.LICENSE.txt"
 # sha256 of dist/d3.min.js from the d3@7.9.0 npm tarball (npm integrity
 # sha512-e1U46jVP+w7Iut8Jt8ri1YsPOvFpg46k+K8TpCb0P+zjCkjkPnV7WzfDJzMHy1LnA+wj5pLT1wjO901gLXeEhA==).
 VENDORED_D3_SHA256 = "f2094bbf6141b359722c4fe454eb6c4b0f0e42cc10cc7af921fc158fceb86539"
@@ -101,18 +101,18 @@ class TestVendoredD3:
     def test_panel_loads_d3_from_the_bundled_copy(self):
 
         """WHEN its source is read."""
-        constants = (FRONTEND_DIR / "constants.js").read_text(encoding="utf-8")
+        constants = (FRONTEND_DIR / "shared" / "constants.js").read_text(encoding="utf-8")
 
         """THEN the D3 script URL resolves to the vendored file next to the module."""
         assert re.search(
-            r'D3_SCRIPT_URL = new URL\("\./d3\.min\.js", import\.meta\.url\)',
+            r'D3_SCRIPT_URL = new URL\("\.\./vendor/d3\.min\.js", import\.meta\.url\)',
             constants,
         )
 
     """GIVEN the hand-written panel modules."""
     def test_no_panel_module_references_a_remote_script_host(self):
 
-        modules = [p for p in FRONTEND_DIR.glob("*.js") if p != VENDORED_D3]
+        modules = [p for p in FRONTEND_DIR.rglob("*.js") if "vendor" not in p.parts]
 
         """WHEN their sources are scanned for CDN hosts."""
         offenders = [
@@ -176,12 +176,12 @@ class TestServedBundle:
         client = await hass_client_no_auth()
 
         """WHEN an unauthenticated client fetches D3 and the module that points at it."""
-        d3_response = await client.get(f"{PANEL_URL_BASE}/d3.min.js")
-        constants_response = await client.get(f"{PANEL_URL_BASE}/constants.js")
+        d3_response = await client.get(f"{PANEL_URL_BASE}/vendor/d3.min.js")
+        constants_response = await client.get(f"{PANEL_URL_BASE}/shared/constants.js")
 
         """THEN Home Assistant itself serves the unmodified bundle, with no internet needed."""
         assert d3_response.status == 200
         assert "javascript" in d3_response.content_type
         assert hashlib.sha256(await d3_response.read()).hexdigest() == VENDORED_D3_SHA256
         assert constants_response.status == 200
-        assert 'new URL("./d3.min.js", import.meta.url)' in await constants_response.text()
+        assert 'new URL("../vendor/d3.min.js", import.meta.url)' in await constants_response.text()

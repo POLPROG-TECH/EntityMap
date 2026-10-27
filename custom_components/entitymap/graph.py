@@ -1,4 +1,4 @@
-"""Graph builder - orchestrates source adapters and builds the dependency graph."""
+"""Builds the dependency graph by running every source adapter."""
 
 from __future__ import annotations
 
@@ -30,6 +30,7 @@ from .const import (
     SCAN_STATUS_NEVER,
     SCAN_STATUS_OK,
 )
+from .fragility import detect_fragility
 from .models import DependencyGraph
 
 if TYPE_CHECKING:
@@ -105,10 +106,9 @@ class GraphBuilder:
                         type(adapter).__name__,
                     )
 
-            # Compute findings once per scan so sensors and the panel can reuse them
-            from .fragility import detect_fragility
-
-            # Atomic swap
+            # The new graph replaces the old one only once it is complete, so readers
+            # never see a half-built graph. Findings are computed here once per scan
+            # for the sensors and the panel to share.
             self.graph = new_graph
             self.findings = detect_fragility(new_graph)
             self.last_scan = datetime.now(UTC)
@@ -132,14 +132,16 @@ class GraphBuilder:
             self._scanning = False
 
     def get_graph_data(self) -> dict:
-        """Get serializable graph data for the frontend."""
-        return self.graph.as_dict()
+        """Get serializable graph data plus scan metadata for the frontend."""
+        data = self.graph.as_dict()
+        data["last_scan"] = self.last_scan.isoformat() if self.last_scan else None
+        data["scan_status"] = self.last_scan_status
+
+        return data
 
     def export_data(self) -> dict:
         """Full graph plus findings and scan metadata, for the export service."""
-        data = self.graph.as_dict()
+        data = self.get_graph_data()
         data["findings"] = [f.as_dict() for f in self.findings]
-        data["last_scan"] = self.last_scan.isoformat() if self.last_scan else None
-        data["scan_status"] = self.last_scan_status
 
         return data

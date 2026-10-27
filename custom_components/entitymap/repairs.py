@@ -12,5 +12,5 @@ async def async_create_fix_flow(
     data: dict | None,
 ) -> RepairsFlow:
     """Create a repair flow for an EntityMap issue."""
-    # Most EntityMap issues are informational - user should fix manually
+    # The fix is a configuration change only the user can make, so the flow just confirms.
     return ConfirmRepairFlow()

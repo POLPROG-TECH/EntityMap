@@ -1,7 +1,7 @@
 """Static serving for the EntityMap frontend panel.
 
-The panel is a multi-file ES module (entitymap-panel.js plus constants.js and
-styles.js), so the whole frontend directory is served as a static path. The
+The panel is a multi-file ES module (entitymap-panel.js plus feature folders
+and a vendored D3), so the whole frontend directory is served as a static path. The
 module is imported by the browser without an auth token, and static paths are
 public, which is exactly what a frontend bundle needs.
 """

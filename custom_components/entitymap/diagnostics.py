@@ -19,8 +19,8 @@ async def async_get_config_entry_diagnostics(
     graph = builder.graph
     findings = detect_fragility(graph)
 
-    # Redact entity IDs to avoid leaking user configuration details
-    # We keep the domain prefix but redact the object_id part
+    # Diagnostics get shared in public issues. The domain stays readable for debugging,
+    # the object id (which often names rooms and people) does not.
     def redact_id(node_id: str) -> str:
         if "." in node_id:
             domain, _obj_id = node_id.split(".", 1)

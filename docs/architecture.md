@@ -87,16 +87,40 @@ Impact analysis combines:
 
 ## Frontend
 
-The panel is a native Web Component (`HTMLElement` + Shadow DOM), served as a **static ES-module directory** - `panel.py` registers `/entitymap_frontend/` via `StaticPathConfig`, and the sidebar panel's `module_url` points at `entitymap-panel.js`. The code is split into focused modules composed as mixins:
+The panel is a native Web Component (`HTMLElement` + Shadow DOM), served as a **static ES-module directory**: `panel.py` registers `/entitymap_frontend/` via `StaticPathConfig`, and the sidebar panel's `module_url` points at `entitymap-panel.js`. There is no build step.
 
-- `entitymap-panel.js` - core element: lifecycle, data loading, render/event wiring
-- `layout.js` - shell markup, filter chips, legend
-- `graph-view.js` / `graph-render.js` / `graph-interactions.js` - graph orchestration, D3 drawing primitives, and interactions (focus, path, scope filter, export, banner)
-- `hierarchy-view.js` / `hierarchy-tree.js` - hierarchy list and D3 tree
-- `findings-view.js`, `detail-view.js` - issues grid and detail drawer
-- `constants.js` (config + palettes), `graph-data.js` (pure helpers: degree, domain, shortest path), `styles.js` (CSS)
+```text
+frontend/
+  entitymap-panel.js   composition root: the custom element, its mixin stack and stylesheet
+  panel/               shell: layout, header, filter bar, scope picker, view menu, theme sync, data sync (WebSocket +
+                       live scan events), URL routing, panel state
+  graph/               dependency graph: view, rendering, decoration (area hulls, hover, tooltip),
+                       viewport (zoom, fit, minimap), interactions (focus, path, export),
+                       pure filters, geometry, node glyphs and entity folding; layouts/ holds the
+                       pure room, event flow and radial layouts (target positions plus labeled
+                       frames or rings), which a weak force simulation animates nodes toward;
+                       scene3d/ holds the layered 3D
+                       view (canvas renderer and drawing, input, camera math, per-frame projection,
+                       label placement, keyboard navigation, floor layout), loaded on first use
+  findings/            Issues view and its pure filtering, sorting and CSV export
+  detail/              node detail drawer
+  hierarchy/           area -> device -> entity list and D3 tree, with the tree's intro and
+                       branch-tracing animation
+  shared/              pure building blocks: constants, graph model, i18n, HTML escaping,
+                       Home Assistant links, labels, SVG shapes, downloads
+  locales/             en.js, pl.js (keys must match)
+  vendor/              D3.js v7.9.0 and its licence, never edited
+```
 
-Capabilities: D3 force layout, SVG rendering, node size by degree, curved parallel edges, type/area/domain filters, search highlighting, focus (neighborhood isolation) and shortest-path highlighting, minimap, zoom controls, PNG export, dark mode, a colorblind-safe palette, a compact density mode, keyboard navigation, and a screen-reader live region. Tunable layout values live in `constants.js` (`GRAPH`). D3.js v7.9.0 is vendored as `frontend/d3.min.js` (ISC licence in `frontend/d3.LICENSE.txt`) and loaded from the panel's own static path on first panel load, so the graph works without internet access.
+Dependency rules (a convention kept in review, not checked by the tests):
+
+- `shared/` and `locales/` import only each other.
+- Each feature folder (`graph/`, `findings/`, `detail/`, `hierarchy/`) and the `panel/` shell import only their own folder plus `shared/` and `locales/`. Features never import each other.
+- Only `entitymap-panel.js` knows every feature: it stacks their mixins and joins their stylesheets into one constructable `CSSStyleSheet` adopted by the shadow root.
+
+Features are mixins on one element, so at runtime they share the state fields listed in `panel/panel-state.js` and call each other's methods through `this` (for example `_openNodeInGraph`, `_selectNode`, `_t`). Pure logic (filters, layouts, geometry, findings selection, routing, i18n) lives in plain functions next to the feature that uses it and is unit-tested with `node --test "tests/frontend/*.test.mjs"`.
+
+Capabilities: D3 force layout and structured layouts (by room, event flow, around the selected node), folding entities into devices, SVG rendering, node size by degree, curved parallel edges, type/area/domain filters, search highlighting, focus (neighborhood isolation) and shortest-path highlighting, minimap, zoom controls, PNG export, dark mode, a colorblind-safe palette, a compact density mode, keyboard navigation, and a screen-reader live region. Tunable layout values live in `shared/constants.js` (`GRAPH`). D3.js v7.9.0 is vendored as `frontend/vendor/d3.min.js` (ISC licence in `frontend/vendor/d3.LICENSE.txt`) and loaded from the panel's own static path on first panel load, so the graph works without internet access.
 
 ## Resource Usage
 

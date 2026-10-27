@@ -14,6 +14,7 @@ from .hierarchy import build_hierarchy
 from .migration import get_migration_report
 
 if TYPE_CHECKING:
+    from . import EntityMapRuntimeData
     from .graph import GraphBuilder
 
 _WS_REGISTERED = False
@@ -185,12 +186,9 @@ def _get_builder(hass: HomeAssistant) -> GraphBuilder | None:
     if not entries:
         return None
 
-    entry = entries[0]
+    runtime_data: EntityMapRuntimeData | None = getattr(entries[0], "runtime_data", None)
 
-    if hasattr(entry, "runtime_data") and entry.runtime_data:
-        return entry.runtime_data.builder
-
-    return None
+    return runtime_data.builder if runtime_data else None
 
 
 def _require_builder(

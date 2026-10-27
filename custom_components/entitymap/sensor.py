@@ -100,8 +100,11 @@ class EntityMapSensor(RestoreSensor):
         """Restore the last value and register the graph update listener."""
         await super().async_added_to_hass()
         last_data = await self.async_get_last_sensor_data()
-        if last_data is not None:
-            self._restored_native_value = last_data.native_value
+        restored = last_data.native_value if last_data else None
+
+        if isinstance(restored, int | datetime):
+            self._restored_native_value = restored
+
         self.async_on_remove(
             self.hass.bus.async_listen(EVENT_GRAPH_UPDATED, self._handle_graph_update)
         )

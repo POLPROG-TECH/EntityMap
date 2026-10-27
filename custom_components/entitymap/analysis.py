@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections import Counter
 
 from .const import NodeType, Severity
+from .fragility import detect_fragility
 from .models import (
     DependencyGraph,
     FragilityFinding,
@@ -20,6 +21,9 @@ TRANSITIVE_DEPENDENT_CAP = 30
 HIGH_VALUE_DEPENDENT_POINTS = 5
 DEVICE_REFERENCE_POINTS = 5
 DEVICE_REFERENCE_CAP = 20
+
+# Node type names are singular nouns; "entity" is the only one with an irregular plural.
+IRREGULAR_PLURALS = {"entity": "entities"}
 
 RISK_CRITICAL = 70
 RISK_HIGH = 50
@@ -39,36 +43,25 @@ def analyze_impact(graph: DependencyGraph, node_id: str) -> ImpactReport:
 
     node = graph.nodes[node_id]
 
-    # Get all direct dependents
     direct_dependents = graph.get_dependents(node_id)
-
-    # Get transitive dependents
     all_affected = graph.get_transitive_dependents(node_id)
 
-    # Count by type
     type_counter: Counter[str] = Counter()
     for dep_id in all_affected:
         if dep_id in graph.nodes:
             type_counter[graph.nodes[dep_id].node_type.value] += 1
 
-    # Calculate risk score (0-100)
     risk_score = _calculate_risk_score(graph, node_id, direct_dependents, all_affected)
-
-    # Determine severity
     severity = _risk_to_severity(risk_score)
 
-    # Build summary
     parts: list[str] = []
     for ntype, count in sorted(type_counter.items(), key=lambda x: -x[1]):
-        label = ntype + "s" if count > 1 else ntype
+        label = IRREGULAR_PLURALS.get(ntype, f"{ntype}s") if count > 1 else ntype
         parts.append(f"{count} {label}")
     affected_summary = ", ".join(parts) if parts else "no objects"
     summary = f"Removing or replacing '{node.title}' may affect {affected_summary}."
 
-    # Fragility findings for this node
     findings = _get_node_findings(graph, node_id)
-
-    # Migration suggestions
     suggestions = _get_migration_suggestions(graph, node_id, node)
 
     report = ImpactReport(
@@ -91,16 +84,16 @@ def _calculate_risk_score(
     direct_deps: set[str],
     transitive_deps: set[str],
 ) -> float:
-    """Calculate a risk score from 0-100."""
+    """Score the risk of removing a node, from 0 to 100.
+
+    Direct dependents weigh more than transitive ones, automations and scripts
+    among them add extra, and device_id references count as fragile. Each part
+    is capped so one large factor cannot reach the maximum on its own.
+    """
     score = 0.0
-
-    # Direct dependents contribute more
     score += min(len(direct_deps) * DIRECT_DEPENDENT_POINTS, DIRECT_DEPENDENT_CAP)
-
-    # Transitive dependents
     score += min(len(transitive_deps) * TRANSITIVE_DEPENDENT_POINTS, TRANSITIVE_DEPENDENT_CAP)
 
-    # High-value dependents (automations, scripts) add more risk
     score += HIGH_VALUE_DEPENDENT_POINTS * sum(
         1
         for dep_id in direct_deps
@@ -108,7 +101,6 @@ def _calculate_risk_score(
         and dep_node.node_type in (NodeType.AUTOMATION, NodeType.SCRIPT)
     )
 
-    # Device ID references (fragile)
     inbound = graph.get_inbound(node_id)
     device_trigger_count = sum(1 for e in inbound if "device" in e.dependency_kind.value)
     score += min(device_trigger_count * DEVICE_REFERENCE_POINTS, DEVICE_REFERENCE_CAP)
@@ -135,9 +127,6 @@ def _risk_to_severity(risk_score: float) -> Severity:
 
 def _get_node_findings(graph: DependencyGraph, node_id: str) -> list[FragilityFinding]:
     """Get fragility findings related to a specific node."""
-    # Import here to avoid circular dependency
-    from .fragility import detect_fragility
-
     all_findings = detect_fragility(graph)
     node_findings = [
         f for f in all_findings if f.node_id == node_id or node_id in f.related_node_ids

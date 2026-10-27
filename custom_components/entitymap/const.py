@@ -7,14 +7,12 @@ from typing import Final
 
 DOMAIN: Final = "entitymap"
 
-# ── Configuration keys ──────────────────────────────────────────────
 CONF_SCAN_ON_STARTUP: Final = "scan_on_startup"
 CONF_AUTO_REFRESH: Final = "auto_refresh"
 CONF_SCAN_INTERVAL_HOURS: Final = "scan_interval_hours"
 CONF_INCLUDE_TEMPLATES: Final = "include_templates"
 CONF_INCLUDE_GROUPS: Final = "include_groups"
 
-# ── Defaults ────────────────────────────────────────────────────────
 DEFAULT_SCAN_ON_STARTUP: Final = True
 DEFAULT_AUTO_REFRESH: Final = True
 DEFAULT_SCAN_INTERVAL_HOURS: Final = 6
@@ -24,27 +22,22 @@ DEFAULT_INCLUDE_GROUPS: Final = True
 # Collapse bursts of registry changes into a single rescan (seconds).
 REGISTRY_REFRESH_COOLDOWN_SECONDS: Final = 15.0
 
-# ── Scan status ─────────────────────────────────────────────────────
 SCAN_STATUS_NEVER: Final = "never"
 SCAN_STATUS_OK: Final = "ok"
 SCAN_STATUS_ERRORS: Final = "errors"
 
-# ── Panel ───────────────────────────────────────────────────────────
 PANEL_TITLE: Final = "EntityMap"
 PANEL_ICON: Final = "mdi:graph-outline"
 
-# ── Services ────────────────────────────────────────────────────────
 SERVICE_SCAN: Final = "scan"
 SERVICE_ANALYZE_IMPACT: Final = "analyze_impact"
 SERVICE_GET_DEPENDENCIES: Final = "get_dependencies"
 SERVICE_EXPORT: Final = "export"
 
-# ── Events ──────────────────────────────────────────────────────────
 EVENT_GRAPH_UPDATED: Final = f"{DOMAIN}_graph_updated"
 EVENT_SCAN_STARTED: Final = f"{DOMAIN}_scan_started"
 EVENT_SCAN_COMPLETED: Final = f"{DOMAIN}_scan_completed"
 
-# ── Attributes ──────────────────────────────────────────────────────
 ATTR_NODE_ID: Final = "node_id"
 ATTR_NODE_TYPE: Final = "node_type"
 ATTR_TARGET_NODE: Final = "target_node"

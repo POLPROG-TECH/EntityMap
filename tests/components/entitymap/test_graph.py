@@ -144,6 +144,31 @@ class TestGraphBuilderSerialization:
         assert data["node_count"] == 0
         assert data["edge_count"] == 0
 
+    """GIVEN a builder that has never scanned."""
+    def test_get_graph_data_reports_scan_metadata(self, builder):
+
+        """WHEN get_graph_data is called."""
+        data = builder.get_graph_data()
+
+        """THEN the panel can tell that no scan has run yet."""
+        assert data["last_scan"] is None
+        assert data["scan_status"] == "never"
+
+    """GIVEN a builder that completed a scan."""
+    def test_get_graph_data_reports_last_scan_time(self, builder):
+
+        from datetime import UTC, datetime
+
+        builder.last_scan = datetime(2026, 10, 27, 8, 0, tzinfo=UTC)
+        builder.last_scan_status = "ok"
+
+        """WHEN get_graph_data is called."""
+        data = builder.get_graph_data()
+
+        """THEN it carries the ISO timestamp the panel shows as "scanned N minutes ago"."""
+        assert data["last_scan"] == "2026-10-27T08:00:00+00:00"
+        assert data["scan_status"] == "ok"
+
     """GIVEN a builder with manually added nodes."""
     def test_graph_data_reflects_added_nodes(self, builder):
 
